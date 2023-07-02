@@ -1,12 +1,21 @@
 import { useState } from 'react';
 import { nanoid } from 'nanoid';
+import { useDispatch, useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { NotifyOptions } from '../styles/NotifyOptions';
+import { addContact } from '../../redux/contactsSlice';
+import { getFilterContacts } from '../../redux/selectors';
 import { Form, Label, Input, SubmitButton, Wrapper } from './ContactForm.styled';
 
-export function ContactForm({ onSubmit }) {
+export function ContactForm() {
   const [nameId] = useState(nanoid());
   const [numberId] = useState(nanoid());
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
+
+  const contacts = useSelector(getFilterContacts);
+  const dispatch = useDispatch();
 
   const handleChange = e => {
     const { name, value } = e.target;
@@ -34,9 +43,20 @@ export function ContactForm({ onSubmit }) {
       number,
     };
 
-    onSubmit(contact);
+    formSubmitHandler(contact);
 
     reset();
+  };
+
+  const formSubmitHandler = contact => {
+    const existingContact = contacts.find(cont => cont.name === contact.name);
+
+    if (existingContact) {
+      return toast.error(`Contact with name "${contact.name}" already exists!`, NotifyOptions);
+    }
+
+    dispatch(addContact(contact));
+    toast.success(`Contact with name ${contact.name} is added to the contact list!`, NotifyOptions);
   };
 
   const reset = () => {
